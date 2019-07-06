@@ -195,7 +195,7 @@ class CommandHandler:
                             else:
                                 try:
                                     await handler(tg, command, message)
-                                except Exception(exc):
+                                except Exception as exc:
                                     print("exception in command handler:", exc)
                             break
 
