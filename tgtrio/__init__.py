@@ -162,6 +162,8 @@ async def fetch_loop(tg: TelegramBotApi, dispatcher: Dispatcher):
 
 
 async def play_bot(tg: TelegramBotApi, dispatcher: Dispatcher):
+    from .flood_control import flood_control
+
     consumers = [update_dumper, command_handler.consumer, flood_control]
     async with trio.open_nursery() as nursery:
         for c in consumers:
@@ -220,39 +222,6 @@ async def handle_help(tg: TelegramBotApi, command: str, message: dict):
         "text": """I'm just a testing bot but I'm willing to help""",
     }
     await tg.sendMessage(help_message)
-
-
-async def flood_control(tg: TelegramBotApi, dispatcher: Dispatcher, threshold=0.5):
-    from .activity_monitor import ActivityMonitor
-    from collections import defaultdict
-
-    monitors = defaultdict(lambda: ActivityMonitor(period=5.0))
-    async with dispatcher.consume() as consumer:
-        async for item in consumer:
-            if "message" in item:
-                chat_id = item["message"]["chat"]["id"]
-                from_id = item["message"]["from"]["id"]
-                timestamp = datetime.fromtimestamp(item["message"]["date"])
-                monitor_id = (chat_id, from_id)
-                monitor = monitors[monitor_id]
-                monitor.on_message(timestamp)
-                freq = monitor.get_frequency(timestamp)
-                if freq > threshold:
-                    if not getattr(monitor, "alerting", False):
-                        monitor.alerting = True
-                        user_display = get_user_display_name(item["message"]["from"])
-                        await tg.sendMessage(
-                            {
-                                "chat_id": chat_id,
-                                "parse_mode": "Markdown",
-                                "text": f"Hey [{user_display}](tg://user?id={from_id}), you might be writing too fast!",
-                            }
-                        )
-                else:
-                    monitor.alerting = False
-                chat_name = item["message"]["chat"].get("title") or "private"
-                user_name = item["message"]["from"]["username"]
-                print(f"freq: [{chat_name}][{user_name}] {freq:.2f})")
 
 
 async def amain():
