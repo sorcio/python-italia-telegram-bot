@@ -1,0 +1,4 @@
+__pycache__/
+*.py[cod]
+tgtoken
+last_update_id
