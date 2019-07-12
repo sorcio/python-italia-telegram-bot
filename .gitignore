@@ -1,5 +1,5 @@
 __pycache__/
 .mypy_cache/
 *.py[cod]
-tgtoken
+tgbot.toml
 last_update_id

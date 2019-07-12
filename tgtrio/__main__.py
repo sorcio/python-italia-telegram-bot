@@ -1,6 +1,4 @@
-import trio
-
-from . import amain
+from . import main
 
 
-trio.run(amain)
+main()
